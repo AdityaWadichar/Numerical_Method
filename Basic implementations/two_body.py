@@ -45,7 +45,7 @@ def Explicit_Eular(qa0, pa0, qb0, pb0):
     return qa, pa, qb, pb
 
 
-def Symmetric_Eular_VT(qa0, pa0, qb0, pb0):
+def Symplectic_Eular_VT(qa0, pa0, qb0, pb0):
     # solution variables
     qa = np.zeros([2, N])
     pa = np.zeros([2, N])
@@ -70,7 +70,7 @@ def Symmetric_Eular_VT(qa0, pa0, qb0, pb0):
 
 
 
-def Symmetric_Eular_TV(qa0, pa0, qb0, pb0):
+def Symplectic_Eular_TV(qa0, pa0, qb0, pb0):
     # solution variables
     qa = np.zeros([2, N])
     pa = np.zeros([2, N])
@@ -106,8 +106,8 @@ def animation(qa, qb, name):
     plt.show()
 
 qa1, pa1, qb1, pb1 = Explicit_Eular(qa0, pa0, qb0, pb0)
-qa2, pa2, qb2, pb2 = Symmetric_Eular_VT(qa0, pa0, qb0, pb0)
-qa3, pa3, qb3, pb3 = Symmetric_Eular_TV(qa0, pa0, qb0, pb0)
+qa2, pa2, qb2, pb2 = Symplectic_Eular_VT(qa0, pa0, qb0, pb0)
+qa3, pa3, qb3, pb3 = Symplectic_Eular_TV(qa0, pa0, qb0, pb0)
 
 #plt.title("Gravitational Two Body Problem")
 fig1, a =plt.subplots(2, 2)
@@ -115,34 +115,34 @@ plt.title("Gravitational Two Body Problem")
 
 a[0][0].set_title("Ax")
 a[0][0].plot(qa1[0,:], pa1[0,:], label='Explicit Eular')
-a[0][0].plot(qa2[0,:], pa2[0,:], label='Symmetric Eular VT')
-a[0][0].plot(qa3[0,:], pa3[0,:], label='Symmetric Eular TV')
+a[0][0].plot(qa2[0,:], pa2[0,:], label='Symplectic Eular VT')
+a[0][0].plot(qa3[0,:], pa3[0,:], label='Symplectic Eular TV')
 a[0][0].legend(loc='lower right')
 
 a[0][1].set_title("Ay")
 a[0][1].plot(qa1[1,:], pa1[1,:], label='Explicit Eular')
-a[0][1].plot(qa2[1,:], pa2[1,:], label='Symmetric Eular VT')
-a[0][1].plot(qa3[1,:], pa3[1,:], label='Symmetric Eular TV')
+a[0][1].plot(qa2[1,:], pa2[1,:], label='Symplectic Eular VT')
+a[0][1].plot(qa3[1,:], pa3[1,:], label='Symplectic Eular TV')
 a[0][1].legend(loc='lower right')
 
 a[1][0].set_title("Bx")
 a[1][0].plot(qb1[0,:], pb1[0,:], label='Explicit Eular')
-a[1][0].plot(qb2[0,:], pb2[0,:], label='Symmetric Eular VT')
-a[1][0].plot(qb3[0,:], pb3[0,:], label='Symmetric Eular TV')
+a[1][0].plot(qb2[0,:], pb2[0,:], label='Symplectic Eular VT')
+a[1][0].plot(qb3[0,:], pb3[0,:], label='Symplectic Eular TV')
 a[1][0].legend(loc='lower right')
 
 a[1][1].set_title("By")
 a[1][1].plot(qb1[1,:], pb1[1,:], label='Explicit Eular')
-a[1][1].plot(qb2[1,:], pb2[1,:], label='Symmetric Eular VT')
-a[1][1].plot(qb3[1,:], pb3[1,:], label='Symmetric Eular TV')
+a[1][1].plot(qb2[1,:], pb2[1,:], label='Symplectic Eular VT')
+a[1][1].plot(qb3[1,:], pb3[1,:], label='Symplectic Eular TV')
 a[1][1].legend(loc='lower right')
 
 fig1.text(0.5, 0.04, 'q', ha='center', va='center')
 fig1.text(0.06, 0.5, 'p', ha='center', va='center', rotation='vertical')
 
 plt.show()
-
+fig1.savefig('Gravetational Two Body Problem')
 
 animation(qa1, qb1, 'Explicit Eular')
-animation(qa2, qb2, "Symmetric_Eular_VT")
-animation(qa3, qb3, "Symmetric_Eular_TV")
+animation(qa2, qb2, "Symplectic Eular VT")
+animation(qa3, qb3, "Symplectic Eular TV")

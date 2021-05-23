@@ -39,7 +39,7 @@ def Explicit_Eular(k, h, q0, p0):
 #
 #     return sol
 
-def Symmetric_Eular_VT(k, h, q0, p0):
+def Symplectic_Eular_VT(k, h, q0, p0):
     sol=np.zeros([2,n])
     sol[:,0]=np.array([[q0], [p0]])[:,0]
 
@@ -49,7 +49,7 @@ def Symmetric_Eular_VT(k, h, q0, p0):
 
     return sol
 
-def Symmetric_Eular_TV(k, h, q0, p0):
+def Symplectic_Eular_TV(k, h, q0, p0):
     sol=np.zeros([2,n])
     sol[:,0]=np.array([[q0], [p0]])[:,0]
 
@@ -83,19 +83,19 @@ def animation(ans1, l, name):
 
 ans1 = Explicit_Eular(k, h, q0, p0)
 #ans2 = Implicit_Eular(m, k, h, q0, p0)
-ans3 = Symmetric_Eular_VT(k, h, q0, p0)
-ans4 = Symmetric_Eular_TV(k, h, q0, p0)
+ans3 = Symplectic_Eular_VT(k, h, q0, p0)
+ans4 = Symplectic_Eular_TV(k, h, q0, p0)
 fig=plt.figure()
 plt.title('Mathematical Pendulum')
 plt.xlabel('q')
 plt.ylabel('p')
 plt.plot(ans1[0,:], ans1[1,:], label='Explicit Eular')
 #plt.plot(ans2[0,:], ans2[1,:], label='Implicit Eular')
-plt.plot(ans3[0,:], ans3[1,:], label='Symmetric Eular VT')
-plt.plot(ans4[0,:], ans4[1,:], label='Symmetric Eular TV')
+plt.plot(ans3[0,:], ans3[1,:], label='Symplectic Eular VT')
+plt.plot(ans4[0,:], ans4[1,:], label='Symplectic Eular TV')
 plt.legend()
 plt.show()
 fig.savefig('Mathematical Pendulum')
 # animation(ans1, l, 'Explicit Eular')
-# animation(ans3, l, 'Symmetric Eular VT')
-# animation(ans4, l, 'Symmetric Eular TV')
+# animation(ans3, l, 'Symplectic Eular VT')
+# animation(ans4, l, 'Symplectic Eular TV')
