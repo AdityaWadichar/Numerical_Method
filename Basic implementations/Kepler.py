@@ -3,9 +3,9 @@ from matplotlib import pyplot as plt
 from celluloid import Camera
 import phiKepler
 
-e=1/5
+e=0.2
 h=0.1
-T=2000
+T=200
 
 q0=np.array([[1-e], [0]])
 p0=np.array([[0], [((1+e)/(1-e))**(1/2)]])
@@ -130,10 +130,18 @@ q4, p4, H4 = stormer_verlet(q0, p0, t, mu)
 
 H0 = H[0]
 
-plt.plot(t, H3-H)
+plt.plot(t, H1-H, 'red', label='Explicit_Eular')
+plt.plot(t, H2-H, 'blue', label='Sympletic_Eular_VT')
+plt.plot(t, H3-H, 'orange', label='Sympletic_Eular_TV')
+plt.plot(t, H4-H, 'black', label='stormer_verlet')
+plt.legend()
 plt.show()
 
-plt.plot(t, abs(np.sum(p3+q3-p-q, axis=0)))
+plt.plot(t, abs(np.sum(p1+q1-p-q, axis=0)), 'red', label='Explicit_Eular')
+plt.plot(t, abs(np.sum(p2+q2-p-q, axis=0)), 'blue', label='Sympletic_Eular_VT')
+plt.plot(t, abs(np.sum(p3+q3-p-q, axis=0)), 'orange', label='Sympletic_Eular_TV')
+plt.plot(t, abs(np.sum(p4+q4-p-q, axis=0)), 'black', label='stormer_verlet')
+plt.legend()
 plt.show()
 
 #animation(q, 'Keplar')
