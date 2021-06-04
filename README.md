@@ -1,7 +1,7 @@
 # Gemoetric Numerical Methods
 
 ## Simple pendulum
-![Simple Pendulum](/Baisc_Implementations/Mathematical_Pendulum.png)
+![](/Baisc_Implementations/Mathematical_Pendulum.png)
 
 ## Simple Harmonic Oscillator
 ![](/Basic_Implementations/Simple_Harmonic_Oscillator.png)
