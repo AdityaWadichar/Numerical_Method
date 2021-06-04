@@ -1,4 +1,4 @@
 # Gemoetric Numerical Methods
 
 ## Simple pendulum
-![](Baisc_implementations/Simple Harmonic Oscillator.png)
+![](Baisc implementations/Simple_Harmonic_Oscillator.png)
