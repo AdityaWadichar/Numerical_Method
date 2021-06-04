@@ -2,6 +2,6 @@
 
 ## Simple pendulum
 
-! [](Baisc_Implementations/Simple_Harmonic_Oscillator.png)
+! [] (Baisc_Implementations/Mathematical_Pendulum.png)
 
 hello
