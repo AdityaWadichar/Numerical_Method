@@ -1,9 +1,15 @@
 # Gemoetric Numerical Methods
 
 ## Simple pendulum
+![Simple Pendulum](/Baisc_Implementations/Mathematical_Pendulum.png)
 
-![](/Baisc_Implementations/Mathematical_Pendulum.png)
-![](/Basic_Implementations/Mathematical_Pendulum.png)
-https://github.com/AdityaWadichar/Numerical_Method/blob/baf5c616c345fad7fce9cf3ec0e55ce7f0c136e8/Basic_Implementations/Mathematical_Pendulum.png
+## Simple Harmonic Oscillator
+![](/Basic_Implementations/Simple_Harmonic_Oscillator.png)
 
-hello
+## Gravitational Two Body Problem (Kepler Problem)
+![](/Basic_Implementations/Gravetational_Two_Body_Problem.png)
+![](/Basic_Implementations/two_body.gif)
+
+## Kepler Problem (Relative co-ordinates)
+![](/Basic_Implementations/Kepler_hamiltonion.png)
+![](/Basic_Implementations/Kepler.gif)
