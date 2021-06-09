@@ -1,5 +1,6 @@
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import pyplot as plt
+from celluloid import Camera
 
 
 # constants
@@ -20,22 +21,22 @@ l5 = l1
 g = 9.81
 #T = 10
 N = 100
-h = 0.1
+h = 0.02
 O = [0, 0]
 
 
 #initial conditions
 q10 = np.pi/2 + np.pi/6
 q20 = np.pi/2 + np.pi/3
-q30 = np.pi/2 + np.pi/10
-q40 = np.pi/6.5
-q50 = np.pi/3.5
+q30 = np.pi/2 + np.pi/15
+q40 = np.pi/3.5
+q50 = np.pi/6.5
 
-p10 = 0.01
-p20 = 0.05
-p30 = 0.05
-p40 = 0.1
-p50 = 0.3
+p10 = -10
+p20 = -5
+p30 = -5
+p40 = 10
+p50 = 10
 
 
 q0 = [q10, q20, q30, q40, q50]
@@ -135,8 +136,25 @@ def stormer_verlet(q0, p0, N, h, O):
 
     return q, p, linkx, linky, H
 
+def animation(linkx, linky):
+    fig = plt.figure()
+    #plt.title(name)
+    camera = Camera(fig)
+    for i in range(N):
+        plt.plot([0, linkx[0, i]], [0, linky[0, i]], 'r')
+        plt.plot([linkx[0, i], linkx[1, i]], [linky[0, i], linky[1, i]], 'r')
+        plt.plot([linkx[1, i], linkx[2, i]], [linky[1, i], linky[2, i]], 'r')
+        plt.plot([linkx[1, i], linkx[3, i]], [linky[1, i], linky[3, i]], 'r')
+        plt.plot([linkx[3, i], linkx[4, i]], [linky[3, i], linky[4, i]], 'r')
+
+        camera.snap()
+    animation = camera.animate(repeat=False)
+
+    plt.show()
+    plt.close()
 
 q, p, linkx, linky, H = stormer_verlet(q0, p0, N, h, O)
 t=np.arange(len(H))
-plt.plot(h*t, H)
+plt.plot(h*t, H-H[0])
 plt.show()
+animation(linkx, linky)
