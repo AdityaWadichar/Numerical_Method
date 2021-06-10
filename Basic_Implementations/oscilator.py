@@ -24,7 +24,11 @@ def Explicit_Eular(m, k, h, q0, p0):
         sol[0,i+1] = sol[0,i] + h*sol[1,i]/m
         sol[1,i+1] = sol[1,i] - h*k*sol[0,i]
 
-    return sol
+    H = np.zeros([n])
+    for i in range(n):
+        H[i] = (1 / 2) * m * k * (sol[0, i])**2 + (1 / (2 * m)) * ((sol[1, i]) ** 2)
+
+    return sol, H
 
 
 def Implicit_Eular(m, k, h, q0, p0):
@@ -35,7 +39,11 @@ def Implicit_Eular(m, k, h, q0, p0):
         sol[0,i+1] = (sol[0,i] + h*sol[1,i]/m)*(1/(1+(h**2)*k/m))
         sol[1,i+1] = (sol[1,i] - h*k*sol[0,i])*(1/(1+(h**2)*k/m))
 
-    return sol
+    H = np.zeros([n])
+    for i in range(n):
+        H[i] = (1 / 2) * m * k * (sol[0, i]) ** 2 + (1 / (2 * m)) * ((sol[1, i]) ** 2)
+
+    return sol, H
 
 def Symplectic_Eular_VT(m, k, h, q0, p0):
     sol=np.zeros([2,n])
@@ -45,7 +53,11 @@ def Symplectic_Eular_VT(m, k, h, q0, p0):
         sol[0,i+1] = sol[0,i]*(1-(h**2)*k/m) + h*sol[1,i]/m
         sol[1,i+1] = sol[1,i] - h*k*sol[0,i]
 
-    return sol
+    H = np.zeros([n])
+    for i in range(n):
+        H[i] = (1 / 2) * m * k * (sol[0, i]) ** 2 + (1 / (2 * m)) * ((sol[1, i]) ** 2)
+
+    return sol, H
 
 def Symplectic_Eular_TV(m, k, h, q0, p0):
     sol=np.zeros([2,n])
@@ -55,7 +67,11 @@ def Symplectic_Eular_TV(m, k, h, q0, p0):
         sol[0,i+1] = sol[0,i] + h*sol[1,i]/m
         sol[1,i+1] = sol[1,i]*(1-(h**2)*k/m) - h*k*sol[0,i]
 
-    return sol
+    H = np.zeros([n])
+    for i in range(n):
+        H[i] = (1 / 2) * m * k * (sol[0, i]) ** 2 + (1 / (2 * m)) * ((sol[1, i]) ** 2)
+
+    return sol, H
 
 
 def animation(ans1, name):
@@ -82,10 +98,10 @@ def animation2(ans1, ans2):
     plt.show()
     plt.close()
 
-ans1 = Explicit_Eular(m, k, h, q0, p0)
-ans2 = Implicit_Eular(m, k, h, q0, p0)
-ans3 = Symplectic_Eular_VT(m, k, h, q0, p0)
-ans4 = Symplectic_Eular_TV(m, k, h, q0, p0)
+ans1, H1 = Explicit_Eular(m, k, h, q0, p0)
+ans2, H2 = Implicit_Eular(m, k, h, q0, p0)
+ans3, H3 = Symplectic_Eular_VT(m, k, h, q0, p0)
+ans4, H4 = Symplectic_Eular_TV(m, k, h, q0, p0)
 fig=plt.figure()
 plt.title('Simple Harmonic Oscillator')
 plt.xlabel('q')
@@ -96,9 +112,13 @@ plt.plot(ans3[0,:], ans3[1,:], label='Symplectic Eular VT')
 plt.plot(ans4[0,:], ans4[1,:], label='Symplectic Eular TV')
 plt.legend()
 plt.show()
-fig.savefig('Simple Harmonic Oscillator')
+#fig.savefig('Simple Harmonic Oscillator')
 # animation(ans1, 'Explicit Eular')
 # animation(ans2, 'Implicit Eular')
 # animation(ans3, 'Symplectic Eular VT')
 # animation(ans4, 'Symplectic Eular TV')
 #animation2(ans3, ans4)
+
+t=np.arange(n)
+plt.plot(h*t, H1)
+plt.show()
