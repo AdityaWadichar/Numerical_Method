@@ -5,14 +5,14 @@ from celluloid import Camera
 #constants
 m=1
 g=9.81
-l=9.81
+l=10
 k=(g/l)**(1/2)
 
 #step size
 h=0.1
 
 # initial conditins
-q0=3/2
+q0=np.pi/4
 p0=0
 
 # iterations
@@ -71,7 +71,7 @@ def Symplectic_Eular_TV(k, h, q0, p0):
 
     return sol, H
 
-def stormer_verlet(k, h, qo, p0):
+def stormer_verlet(k, h, q0, p0):
     sol = np.zeros([2, n])
     sol[:, 0] = np.array([[q0], [p0]])[:, 0]
     q1 = np.zeros([n])
@@ -82,11 +82,37 @@ def stormer_verlet(k, h, qo, p0):
         sol[0, i + 1] = q1[i+1] + h * sol[1, i+1]/2
 
     H = np.zeros([n])
+    PE = np.zeros([n])
+    KE = np.zeros([n])
     for i in range(n):
-        #H[i] = -m * g * l * np.cos(sol[0, i]) + (1 / (2 * m)) * ((sol[1, i]) ** 2)
-        H[i] = -m * g * l * np.cos(sol[0, i]) + (1/2)*m*((g*h*i*np.cos(sol[0,i]))**2)
+        PE[i] = -m * g * l * np.cos(sol[0, i])
+        KE[i] = (1 / (2 * m)) * ((sol[1, i]) ** 2)
+        H[i] = PE[i] + KE[i]
+        H1[i] = -m * g * l * np.cos(sol[0, i]) + (1/2)*m*((g*h*i*np.cos(sol[0,i]))**2)
 
-    return sol, H
+    return sol, H, H1, PE, KE
+
+def stormer_verlet1(k, h, q0, p0):
+    sol = np.zeros([2, n])
+    sol[:, 0] = np.array([[q0], [p0]])[:, 0]
+    q1 = np.zeros([n])
+    I = m*l**2
+
+    for i in range(n-1):
+        q1[i+1] = sol[0,i] + h*sol[1,i]/(2*I)
+        sol[1, i + 1] = sol[1, i] - h *m*g*l * np.sin(q1[i + 1])
+        sol[0, i + 1] = q1[i+1] + h * sol[1, i+1]/(2*I)
+
+    H = np.zeros([n])
+    PE = np.zeros([n])
+    KE = np.zeros([n])
+    for i in range(n):
+        PE[i] = -m * g * l * np.cos(sol[0, i])
+        KE[i] = (1 / (2 * I)) * ((sol[1, i]) ** 2)
+        H[i] = PE[i] + KE[i]
+        H1[i] = -m * g * l * np.cos(sol[0, i]) + (1/2)*m*((g*h*i*np.cos(sol[0,i]))**2)
+
+    return sol, H, H1, PE, KE
 
 
 def animation(ans1, l, name):
@@ -114,21 +140,25 @@ ans1, H1 = Explicit_Eular(k, h, q0, p0)
 #ans2, H2 = Implicit_Eular(m, k, h, q0, p0)
 ans3, H3 = Symplectic_Eular_VT(k, h, q0, p0)
 ans4, H4 = Symplectic_Eular_TV(k, h, q0, p0)
-ans5, H5 = stormer_verlet(k, h, q0, p0)
+ans5, H5, H51, PE5, KE5 = stormer_verlet1(k, h, q0, p0)
 fig=plt.figure()
 plt.title('Mathematical Pendulum')
 plt.xlabel('q')
 plt.ylabel('p')
-plt.plot(ans1[0,:], ans1[1,:], label='Explicit Eular')
+plt.plot(ans5[0,:], ans5[1,:], label='Explicit Eular')
 #plt.plot(ans2[0,:], ans2[1,:], label='Implicit Eular')
 plt.plot(ans3[0,:], ans3[1,:], label='Symplectic Eular VT')
 plt.plot(ans4[0,:], ans4[1,:], label='Symplectic Eular TV')
 plt.legend()
 plt.show()
 #fig.savefig('Mathematical Pendulum')
-# animation(ans1, l, 'Explicit Eular')
+animation(ans5, l, 'Explicit Eular')
 # animation(ans3, l, 'Symplectic Eular VT')
 # animation(ans4, l, 'Symplectic Eular TV')
 t=np.arange(n)
-plt.plot(h*t, H5-H5[0])
+plt.plot(h*t, H5, label="H")
+#plt.plot(h*t, H51, label="H1")
+plt.plot(h*t, PE5, label="PE")
+plt.plot(h*t, KE5, label="KE")
+plt.legend()
 plt.show()
