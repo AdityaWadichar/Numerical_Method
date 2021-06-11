@@ -10,6 +10,7 @@ m2 = 2
 m3 = 2
 m4 = m2
 m5 = m1
+m=[m1, m2, m3, m4, m5]
 
 #lengths in m
 l1 = 1
@@ -20,7 +21,7 @@ l5 = l1
 
 g = 9.81
 #T = 10
-N = 100
+N = 1000
 h = 0.02
 O = [0, 0]
 
@@ -79,13 +80,17 @@ def position(q, O):
 
 def stormer_verlet(q0, p0, N, h, O):
     q = np.zeros([5, N])
-    q1 = np.zeros([5, N])
+    qh = np.zeros([5, N])
     p = np.zeros([5, N])
     comx = np.zeros([5, N])
     comy = np.zeros([5, N])
     linkx = np.zeros([5, N])
     linky = np.zeros([5, N])
-    H = np.zeros([N])
+    comhx = np.zeros([5, N])
+    comhy = np.zeros([5, N])
+    linkhx = np.zeros([5, N])
+    linkhy = np.zeros([5, N])
+    #H = np.zeros([N])
 
     q[0][0] = q0[0]
     q[1][0] = q0[1]
@@ -99,42 +104,66 @@ def stormer_verlet(q0, p0, N, h, O):
     p[3][0] = p0[3]
     p[4][0] = p0[4]
 
-    com, link = position(q[:,0], O)
-    comx[:,0] = com[0,:]
-    comy[:, 0] = com[1, :]
-    linkx[:, 0] = link[0, :]
-    linky[:, 0] = link[1, :]
-
-    KE = (1/2)*(((p[0][0])**2)/m1 + ((p[1][0])**2)/m2 + ((p[2][0])**2)/m3 + ((p[3][0])**2)/m4 + ((p[4][0])**2)/m5)
-    PE = g*(m1*comy[0][0] + m2*comy[1][0] + m3*comy[2][0] + m4*comy[3][0] + m5*comy[4][0])
-    H[0] = KE + PE
+    # com, link = position(q[:,0], O)
+    # comx[:,0] = com[0,:]
+    # comy[:, 0] = com[1, :]
+    # linkx[:, 0] = link[0, :]
+    # linky[:, 0] = link[1, :]
+    #
+    # KE = (1/2)*(((p[0][0])**2)/m1 + ((p[1][0])**2)/m2 + ((p[2][0])**2)/m3 + ((p[3][0])**2)/m4 + ((p[4][0])**2)/m5)
+    # PE = g*(m1*comy[0][0] + m2*comy[1][0] + m3*comy[2][0] + m4*comy[3][0] + m5*comy[4][0])
+    # H[0] = KE + PE
 
     for i in range(N-1):
+        com, link = position(q[:, i], O)
+        comx[:, i] = com[0, :]
+        comy[:, i] = com[1, :]
+        linkx[:, i] = link[0,:]
+        linky[:, i] = link[1, :]
+
+        rsq = (comx[:, i])**2 + (comy[:, i])**2
+
+
         for j in range(5):
-            q1[j][i+1] = q[j][i] + (h/(2*m1))*p[j][i]
+            qh[j][i+1] = q[j][i] + (h/2)*p[j][i]/(m[j]*rsq[j])
 
-        p[0][i+1] = p[0][i] + h*(-(m1/2+m2+m3+m4+m5))*l1*g*np.cos(q[0][i])
-        p[1][i + 1] = p[1][i] + h * (-(m2 / 2 + m3 + m4 + m5)) * l2 * g * np.cos(q[1][i])
-        p[2][i + 1] = p[2][i] + h * (-(m3/2)) * l3 * g * np.cos(q[2][i])
-        p[3][i + 1] = p[3][i] + h * (-(m4/2 + m5)) * l4 * g * np.cos(q[3][i])
-        p[4][i + 1] = p[4][i] + h * (-(m5/2)) * l5 * g * np.cos(q[4][i])
+        p[0][i+1] = p[0][i] + h*(-(m1/2+m2+m3+m4+m5))*l1*g*np.cos(qh[0][i])
+        p[1][i + 1] = p[1][i] + h * (-(m2 / 2 + m3 + m4 + m5)) * l2 * g * np.cos(qh[1][i])
+        p[2][i + 1] = p[2][i] + h * (-(m3/2)) * l3 * g * np.cos(qh[2][i])
+        p[3][i + 1] = p[3][i] + h * (-(m4/2 + m5)) * l4 * g * np.cos(qh[3][i])
+        p[4][i + 1] = p[4][i] + h * (-(m5/2)) * l5 * g * np.cos(qh[4][i])
+
+        comh, linkh = position(qh[:, i+1], O)
+        comhx[:, i] = comh[0, :]
+        comhy[:, i] = comh[1, :]
+        linkhx[:, i] = linkh[0, :]
+        linkhy[:, i] = linkh[1, :]
+
+        rhsq = (comx[:, i]) ** 2 + (comy[:, i]) ** 2
 
         for j in range(5):
-            q[j][i + 1] = q1[j][i+1] + (h / (2 * m1)) * p[j][i+1]
+            q[j][i + 1] = qh[j][i+1] + (h / 2) * p[j][i+1]*(m[j]*rhsq[j])
 
-        com, link = position(q[:, i+1], O)
-        comx[:, i+1] = com[0, :]
-        comy[:, i+1] = com[1, :]
-        linkx[:, i+1] = link[0, :]
-        linky[:, i+1] = link[1, :]
+    H = np.zeros([N])
+    KE = np.zeros([N])
+    PE = np.zeros([N])
 
-        KE = (1 / 2) * (
-                    ((p[0][i+1]) ** 2) / m1 + ((p[1][i+1]) ** 2) / m2 + ((p[2][i+1]) ** 2) / m3 + ((p[3][i+1]) ** 2) / m4 + (
-                        (p[4][i+1]) ** 2) / m5)
-        PE = g * (m1 * comy[0][i+1] + m2 * comy[1][i+1] + m3 * comy[2][i+1] + m4 * comy[3][i+1] + m5 * comy[4][i+1])
-        H[i+1] = KE + PE
+    for i in range(N):
+        com, link = position(q[:, i], O)
+        comx[:, i] = com[0, :]
+        comy[:, i] = com[1, :]
+        linkx[:, i] = link[0, :]
+        linky[:, i] = link[1, :]
 
-    return q, p, linkx, linky, H
+        rsq = (comx[:, i]) ** 2 + (comy[:, i]) ** 2
+
+        KE[i] = (1 / 2) * (
+                    ((p[0][i]) ** 2) / (m1*rsq[0]) + ((p[1][i]) ** 2) / (m2*rsq[1]) + ((p[2][i]) ** 2) / (m3*rsq[2]) + ((p[3][i]) ** 2) / (m4*rsq[3]) + (
+                        (p[4][i]) ** 2) / (m5*rsq[4]))
+        PE[i] = g * (m1 * comy[0][i] + m2 * comy[1][i] + m3 * comy[2][i] + m4 * comy[3][i] + m5 * comy[4][i])
+        H[i] = KE[i] + PE[i]
+
+    return q, p, linkx, linky, KE, PE, H
 
 def animation(linkx, linky):
     fig = plt.figure()
@@ -153,8 +182,11 @@ def animation(linkx, linky):
     plt.show()
     plt.close()
 
-q, p, linkx, linky, H = stormer_verlet(q0, p0, N, h, O)
+q, p, linkx, linky, KE, PE, H = stormer_verlet(q0, p0, N, h, O)
 t=np.arange(len(H))
-plt.plot(h*t, H-H[0])
+plt.plot(h*t, H, label="H")
+plt.plot(h*t, KE, label="KE")
+plt.plot(h*t, PE, label="PE")
+plt.legend()
 plt.show()
-animation(linkx, linky)
+#animation(linkx, linky)
