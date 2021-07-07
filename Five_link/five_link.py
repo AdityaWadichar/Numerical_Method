@@ -45,6 +45,7 @@ q0 = [q10, q20, q30, q40, q50]
 dq0 = [dq10, dq20, dq30, dq40, dq50]
 
 q = np.zeros([5, N])
+qh = np.zeros([5, N])
 dq = np.zeros([5, N])
 dqh = np.zeros([5, N])
 comx = np.zeros([5, N])
@@ -279,44 +280,49 @@ def dynamics1(q, dq):
 
 def equation(dqh1):
     #dq1, dq2, dq3, dq4, dq5 = dqh1
-    ddq = dynamics(q[:, current], dqh1)
-    dqh1 = np.matrix((ddq[0,0], ddq[0,1], ddq[0,2], ddq[0,3], ddq[0,4]))
-    a=dqh1 - dq[:, current] - (h/2)*ddq
+    if (Dynamics==0):
+        ddq = dynamics(q[:, current], dqh1)
+    else:
+        ddq = dynamics1(q[:, current], dqh1)
+    ddq1 = np.matrix((ddq[0,0], ddq[0,1], ddq[0,2], ddq[0,3], ddq[0,4]))
+    a=dqh1 - dq[:, current] - (h/2)*ddq1
     b=[a[0,0], a[0,1], a[0,2], a[0,3], a[0,4]]
 
     return b
 
+def equation_1(dqn1):
+    if (Dynamics==0):
+        ddq =  dynamics(qh[:, current+1], dq[:, current])
+        ddqn = dynamics(qh[:, current+1], dqn1)
+    else:
+        ddq = dynamics1(qh[:, current + 1], dq[:, current])
+        ddqn = dynamics1(qh[:, current + 1], dqn1)
+
+    a= dqn1 - dq[:, current] - (h/2)*(ddq + ddqn)
+    b = [a[0, 0], a[0, 1], a[0, 2], a[0, 3], a[0, 4]]
+
+    return b
 
 
+def stormer_verlet(q0, dq0, O):
 
-def stormer_verlet(q0, dq0, N, h, O):
+    # no equations with dq(n+1/2)
 
-    global q, dqh, dq, comx, comy, linkx, linky, TE, KE, PE, current
+    global q, dqh, dq, comx, comy, linkx, linky, TE, KE, PE, current, h, N, Dynamics
 
 
     for current in range(N-1):
         i = current
-        # ddq = dynamics(q[:, i], dq[:, i])
-        # dqh[:, i+1] = dq[:, i] + (h/2)*ddq
-        #
-        # q[:, i+1] = q[:, i] + h*dqh[:, i+1]
-        #
-        # ddq = dynamics(q[:, i+1], dqh[:, i+1])
-        # dq[:, i+1] = dqh[:, i+1] + (h/2)*ddq
-
-        dq1, dq2, dq3, dq4, dq5 = fsolve(equation, (1, 1, 1, 1, 1))
-        dqh[:, i+1] = [dq1, dq2, dq3, dq4, dq5]
+        if (Dynamics==0):
+            ddq = dynamics(q[:, i], dq[:, i])
+        else:
+            ddq = dynamics1(q[:, i], dq[:, i])
+        dqh[:, i+1] = dq[:, i] + (h/2)*ddq
 
         q[:, i+1] = q[:, i] + h*dqh[:, i+1]
 
-        ddq = dynamics1(q[:, i+1], dqh[:, i+1])
+        ddq = dynamics(q[:, i+1], dqh[:, i+1])
         dq[:, i+1] = dqh[:, i+1] + (h/2)*ddq
-
-        # qh[:, i+1] = q[:, i] + (h/2)*dq[:, i]
-        # ddq = dynamics1(qh[:, i+1], dq[:, i])
-        # #print(dq[:, i])
-        # dq[:, i+1] = dq[:, i] + h*ddq
-        # q[:, i+1] = qh[:, i+1] + (h/2)*dq[:, i+1]
 
 
 
@@ -353,6 +359,171 @@ def stormer_verlet(q0, dq0, N, h, O):
 
     return
 
+
+
+def stormer_verlet1(q0, dq0, O):
+
+    # no equations with q(n+1/2)
+
+    global q, dqh, dq, comx, comy, linkx, linky, TE, KE, PE, current, h, N, Dynamics
+
+
+    for current in range(N-1):
+        i = current
+
+        qh[:, i+1] = q[:, i] + (h/2)*dq[:, i]
+        if (Dynamics==0):
+            ddq = dynamics(qh[:, i+1], dq[:, i])
+        else:
+            ddq = dynamics1(qh[:, i + 1], dq[:, i])
+        dq[:, i+1] = dq[:, i] + h*ddq
+        q[:, i+1] = qh[:, i+1] + (h/2)*dq[:, i+1]
+
+
+
+
+    for i in range(N):
+        com, link = position(q[:, i], O)
+        comx[:, i] = com[0, :]
+        comy[:, i] = com[1, :]
+        linkx[:, i] = link[0, :]
+        linky[:, i] = link[1, :]
+        q1, q2, q3, q4, q5 = q[:, i]
+        dq1, dq2, dq3, dq4, dq5 = dq[:, i]
+
+        KE1 = (m1/6)*(l1**2)*(dq1**2)
+        KE2 = (m2/2)*((l1**2)*(dq1**2) + (1/3)*(l2**2)*(dq2**2) + l1*l2*dq1*dq2*np.cos(q1-q2))
+        KE3 = (m3/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (1/4)*(l3**2)*(dq3**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      + l2*l3*dq2*dq3*np.cos(q2-q3) + l1*l3*dq1*dq3*np.cos(q1-q3)) + (1/24)*m3*(l3**2)*(dq3**2)
+
+        KE4 = (m4/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (1/4)*(l4**2)*(dq4**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      - l2*l4*dq2*dq4*np.cos(q2-q4) - l1*l4*dq1*dq4*np.cos(q1-q4)) + (1/24)*m4*(l4**2)*(dq4**2)
+
+        KE5 = (m5/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (l4**2)*(dq4**2) + (1/4)*(l5**2)*(dq5**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      - 2*l2*l4*dq2*dq4*np.cos(q2-q4) - 2*l1*l4*dq1*dq4*np.cos(q1-q4) - l1*l5*dq1*dq5*np.cos(q1-q5)
+                      - l2*l5*dq2*dq5*np.cos(q2-q5) + l4*l5*dq4*dq5*np.cos(q4-q5)) + (1/24)*m5*(l5**2)*(dq5**2)
+
+        KE[i] = KE1 + KE2 + KE3 + KE4 + KE5
+
+
+        # KE[i] = (1 / 2) * (
+        #             ((p[0][i]) ** 2) / (m1*rsq[0]) + ((p[1][i]) ** 2) / (m2*rsq[1]) + ((p[2][i]) ** 2) / (m3*rsq[2]) + ((p[3][i]) ** 2) / (m4*rsq[3]) + (
+        #                 (p[4][i]) ** 2) / (m5*rsq[4]))
+
+        PE[i] = g * (m1 * comy[0][i] + m2 * comy[1][i] + m3 * comy[2][i] + m4 * comy[3][i] + m5 * comy[4][i])
+        TE[i] = KE[i] + PE[i]
+
+    return
+
+
+
+
+
+def stormer_verlet2(q0, dq0, O):
+
+    # equations with dq(n+1/2)
+
+    global q, dqh, dq, comx, comy, linkx, linky, TE, KE, PE, current, h, N, Dynamics
+
+
+    for current in range(N-1):
+        i = current
+
+        dq1, dq2, dq3, dq4, dq5 = fsolve(equation, (1, 1, 1, 1, 1))
+        dqh[:, i+1] = [dq1, dq2, dq3, dq4, dq5]
+
+        q[:, i+1] = q[:, i] + h*dqh[:, i+1]
+
+        ddq = dynamics1(q[:, i+1], dqh[:, i+1])
+        dq[:, i+1] = dqh[:, i+1] + (h/2)*ddq
+
+
+
+
+
+    for i in range(N):
+        com, link = position(q[:, i], O)
+        comx[:, i] = com[0, :]
+        comy[:, i] = com[1, :]
+        linkx[:, i] = link[0, :]
+        linky[:, i] = link[1, :]
+        q1, q2, q3, q4, q5 = q[:, i]
+        dq1, dq2, dq3, dq4, dq5 = dq[:, i]
+
+        KE1 = (m1/6)*(l1**2)*(dq1**2)
+        KE2 = (m2/2)*((l1**2)*(dq1**2) + (1/3)*(l2**2)*(dq2**2) + l1*l2*dq1*dq2*np.cos(q1-q2))
+        KE3 = (m3/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (1/4)*(l3**2)*(dq3**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      + l2*l3*dq2*dq3*np.cos(q2-q3) + l1*l3*dq1*dq3*np.cos(q1-q3)) + (1/24)*m3*(l3**2)*(dq3**2)
+
+        KE4 = (m4/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (1/4)*(l4**2)*(dq4**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      - l2*l4*dq2*dq4*np.cos(q2-q4) - l1*l4*dq1*dq4*np.cos(q1-q4)) + (1/24)*m4*(l4**2)*(dq4**2)
+
+        KE5 = (m5/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (l4**2)*(dq4**2) + (1/4)*(l5**2)*(dq5**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      - 2*l2*l4*dq2*dq4*np.cos(q2-q4) - 2*l1*l4*dq1*dq4*np.cos(q1-q4) - l1*l5*dq1*dq5*np.cos(q1-q5)
+                      - l2*l5*dq2*dq5*np.cos(q2-q5) + l4*l5*dq4*dq5*np.cos(q4-q5)) + (1/24)*m5*(l5**2)*(dq5**2)
+
+        KE[i] = KE1 + KE2 + KE3 + KE4 + KE5
+
+
+        # KE[i] = (1 / 2) * (
+        #             ((p[0][i]) ** 2) / (m1*rsq[0]) + ((p[1][i]) ** 2) / (m2*rsq[1]) + ((p[2][i]) ** 2) / (m3*rsq[2]) + ((p[3][i]) ** 2) / (m4*rsq[3]) + (
+        #                 (p[4][i]) ** 2) / (m5*rsq[4]))
+
+        PE[i] = g * (m1 * comy[0][i] + m2 * comy[1][i] + m3 * comy[2][i] + m4 * comy[3][i] + m5 * comy[4][i])
+        TE[i] = KE[i] + PE[i]
+
+    return
+
+
+def stormer_verlet3(q0, dq0, O):
+
+    # equations with q(n+1/2)
+
+    global q, qh, dq, dqh, comx, comy, linkx, linky, TE, KE, PE, current, Dynamics
+
+
+    for current in range(N-1):
+        i = current
+
+        qh[:, i+1] = q[:, i] + (h/2)*dq[:, i]
+
+        dq1, dq2, dq3, dq4, dq5 = fsolve(equation_1, (1, 1, 1, 1, 1))
+        dq[:, i + 1] = [dq1, dq2, dq3, dq4, dq5]
+
+        q[:, i+1] = qh[:, i+1] + (h/2)*dq[:, i+1]
+
+    for i in range(N):
+        com, link = position(q[:, i], O)
+        comx[:, i] = com[0, :]
+        comy[:, i] = com[1, :]
+        linkx[:, i] = link[0, :]
+        linky[:, i] = link[1, :]
+        q1, q2, q3, q4, q5 = q[:, i]
+        dq1, dq2, dq3, dq4, dq5 = dq[:, i]
+
+        KE1 = (m1/6)*(l1**2)*(dq1**2)
+        KE2 = (m2/2)*((l1**2)*(dq1**2) + (1/3)*(l2**2)*(dq2**2) + l1*l2*dq1*dq2*np.cos(q1-q2))
+        KE3 = (m3/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (1/4)*(l3**2)*(dq3**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      + l2*l3*dq2*dq3*np.cos(q2-q3) + l1*l3*dq1*dq3*np.cos(q1-q3)) + (1/24)*m3*(l3**2)*(dq3**2)
+
+        KE4 = (m4/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (1/4)*(l4**2)*(dq4**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      - l2*l4*dq2*dq4*np.cos(q2-q4) - l1*l4*dq1*dq4*np.cos(q1-q4)) + (1/24)*m4*(l4**2)*(dq4**2)
+
+        KE5 = (m5/2)*((l1**2)*(dq1**2) + (l2**2)*(dq2**2) + (l4**2)*(dq4**2) + (1/4)*(l5**2)*(dq5**2) + 2*l1*l2*dq1*dq2*np.cos(q1-q2)
+                      - 2*l2*l4*dq2*dq4*np.cos(q2-q4) - 2*l1*l4*dq1*dq4*np.cos(q1-q4) - l1*l5*dq1*dq5*np.cos(q1-q5)
+                      - l2*l5*dq2*dq5*np.cos(q2-q5) + l4*l5*dq4*dq5*np.cos(q4-q5)) + (1/24)*m5*(l5**2)*(dq5**2)
+
+        KE[i] = KE1 + KE2 + KE3 + KE4 + KE5
+
+
+        # KE[i] = (1 / 2) * (
+        #             ((p[0][i]) ** 2) / (m1*rsq[0]) + ((p[1][i]) ** 2) / (m2*rsq[1]) + ((p[2][i]) ** 2) / (m3*rsq[2]) + ((p[3][i]) ** 2) / (m4*rsq[3]) + (
+        #                 (p[4][i]) ** 2) / (m5*rsq[4]))
+
+        PE[i] = g * (m1 * comy[0][i] + m2 * comy[1][i] + m3 * comy[2][i] + m4 * comy[3][i] + m5 * comy[4][i])
+        TE[i] = KE[i] + PE[i]
+
+
 def animation(linkx, linky):
     fig = plt.figure()
     #plt.title(name)
@@ -365,12 +536,14 @@ def animation(linkx, linky):
         plt.plot([linkx[3, i], linkx[4, i]], [linky[3, i], linky[4, i]], 'r')
 
         camera.snap()
-    animation = camera.animate(repeat=False)
+    animation = camera.animate(repeat=False, interval=60)
 
     plt.show()
     plt.close()
 
-stormer_verlet(q0, dq0, N, h, O)
+
+Dynamics = 0
+stormer_verlet(q0, dq0, O)
 print(dq)
 t=np.arange(N)
 plt.plot(h*t, TE, label="Total Energy")
