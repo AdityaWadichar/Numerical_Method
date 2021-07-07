@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from celluloid import Camera
+from scipy.optimize import fsolve
 
 
 # constants
@@ -22,7 +23,7 @@ l5 = l1
 g = 9.81
 #T = 10
 N = 200
-h = 0.1
+h = 0.01
 O = [0, 0]
 
 
@@ -33,15 +34,39 @@ q30 = np.pi/6
 q40 = np.pi/6
 q50 = np.pi/3
 
-dq10 = -0.1
-dq20 = 0.1
-dq30 = -0.1
-dq40 = 0.1
-dq50 = -0.1
+dq10 = -0.1*0
+dq20 = 0.1*0
+dq30 = -0.1*0
+dq40 = 0.1*0
+dq50 = -0.1*0
 
 
 q0 = [q10, q20, q30, q40, q50]
 dq0 = [dq10, dq20, dq30, dq40, dq50]
+
+q = np.zeros([5, N])
+dq = np.zeros([5, N])
+dqh = np.zeros([5, N])
+comx = np.zeros([5, N])
+comy = np.zeros([5, N])
+linkx = np.zeros([5, N])
+linky = np.zeros([5, N])
+
+q[0][0] = q0[0]
+q[1][0] = q0[1]
+q[2][0] = q0[2]
+q[3][0] = q0[3]
+q[4][0] = q0[4]
+
+dq[0][0] = dq0[0]
+dq[1][0] = dq0[1]
+dq[2][0] = dq0[2]
+dq[3][0] = dq0[3]
+dq[4][0] = dq0[4]
+
+TE = np.zeros([N])
+KE = np.zeros([N])
+PE = np.zeros([N])
 
 
 def position(q, O):
@@ -252,37 +277,25 @@ def dynamics1(q, dq):
     return ddq
 
 
+def equation(dqh1):
+    #dq1, dq2, dq3, dq4, dq5 = dqh1
+    ddq = dynamics(q[:, current], dqh1)
+    dqh1 = np.matrix((ddq[0,0], ddq[0,1], ddq[0,2], ddq[0,3], ddq[0,4]))
+    a=dqh1 - dq[:, current] - (h/2)*ddq
+    b=[a[0,0], a[0,1], a[0,2], a[0,3], a[0,4]]
+
+    return b
+
 
 
 
 def stormer_verlet(q0, dq0, N, h, O):
-    q = np.zeros([5, N])
-    qh = np.zeros([5, N])
-    dq = np.zeros([5, N])
-    comx = np.zeros([5, N])
-    comy = np.zeros([5, N])
-    linkx = np.zeros([5, N])
-    linky = np.zeros([5, N])
-    comhx = np.zeros([5, N])
-    comhy = np.zeros([5, N])
-    linkhx = np.zeros([5, N])
-    linkhy = np.zeros([5, N])
-    #H = np.zeros([N])
 
-    q[0][0] = q0[0]
-    q[1][0] = q0[1]
-    q[2][0] = q0[2]
-    q[3][0] = q0[3]
-    q[4][0] = q0[4]
-
-    dq[0][0] = dq0[0]
-    dq[1][0] = dq0[1]
-    dq[2][0] = dq0[2]
-    dq[3][0] = dq0[3]
-    dq[4][0] = dq0[4]
+    global q, dqh, dq, comx, comy, linkx, linky, TE, KE, PE, current
 
 
-    for i in range(N-1):
+    for current in range(N-1):
+        i = current
         # ddq = dynamics(q[:, i], dq[:, i])
         # dqh[:, i+1] = dq[:, i] + (h/2)*ddq
         #
@@ -291,15 +304,21 @@ def stormer_verlet(q0, dq0, N, h, O):
         # ddq = dynamics(q[:, i+1], dqh[:, i+1])
         # dq[:, i+1] = dqh[:, i+1] + (h/2)*ddq
 
-        qh[:, i+1] = q[:, i] + (h/2)*dq[:, i]
-        ddq = dynamics1(qh[:, i+1], dq[:, i])
-        #print(dq[:, i])
-        dq[:, i+1] = dq[:, i] + h*ddq
-        q[:, i+1] = qh[:, i+1] + (h/2)*dq[:, i+1]
+        dq1, dq2, dq3, dq4, dq5 = fsolve(equation, (1, 1, 1, 1, 1))
+        dqh[:, i+1] = [dq1, dq2, dq3, dq4, dq5]
 
-    TE = np.zeros([N])
-    KE = np.zeros([N])
-    PE = np.zeros([N])
+        q[:, i+1] = q[:, i] + h*dqh[:, i+1]
+
+        ddq = dynamics1(q[:, i+1], dqh[:, i+1])
+        dq[:, i+1] = dqh[:, i+1] + (h/2)*ddq
+
+        # qh[:, i+1] = q[:, i] + (h/2)*dq[:, i]
+        # ddq = dynamics1(qh[:, i+1], dq[:, i])
+        # #print(dq[:, i])
+        # dq[:, i+1] = dq[:, i] + h*ddq
+        # q[:, i+1] = qh[:, i+1] + (h/2)*dq[:, i+1]
+
+
 
     for i in range(N):
         com, link = position(q[:, i], O)
@@ -332,7 +351,7 @@ def stormer_verlet(q0, dq0, N, h, O):
         PE[i] = g * (m1 * comy[0][i] + m2 * comy[1][i] + m3 * comy[2][i] + m4 * comy[3][i] + m5 * comy[4][i])
         TE[i] = KE[i] + PE[i]
 
-    return q, dq, linkx, linky, KE, PE, TE
+    return
 
 def animation(linkx, linky):
     fig = plt.figure()
@@ -351,7 +370,8 @@ def animation(linkx, linky):
     plt.show()
     plt.close()
 
-q, dq, linkx, linky, KE, PE, TE = stormer_verlet(q0, dq0, N, h, O)
+stormer_verlet(q0, dq0, N, h, O)
+print(dq)
 t=np.arange(N)
 plt.plot(h*t, TE, label="Total Energy")
 plt.plot(h*t, KE, label="Kinetic Energy")
