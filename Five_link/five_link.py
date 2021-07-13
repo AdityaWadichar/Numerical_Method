@@ -41,8 +41,10 @@ dq40 = 0.1*0
 dq50 = -0.1*0
 
 
+# required declarations
 q0 = [q10, q20, q30, q40, q50]
 dq0 = [dq10, dq20, dq30, dq40, dq50]
+
 
 q = np.zeros([5, N])
 qh = np.zeros([5, N])
@@ -290,6 +292,18 @@ def equation(dqh1):
 
     return b
 
+def equation3(dq1):
+    #dq1, dq2, dq3, dq4, dq5 = dqh1
+    if (Dynamics==0):
+        ddq = dynamics(q[:, current+1], dq1)
+    else:
+        ddq = dynamics1(q[:, current+1], dq1)
+    ddq1 = np.matrix((ddq[0,0], ddq[0,1], ddq[0,2], ddq[0,3], ddq[0,4]))
+    a=dq1 - dqh[:, current+1] - (h/2)*ddq1
+    b=[a[0,0], a[0,1], a[0,2], a[0,3], a[0,4]]
+
+    return b
+
 def equation_1(dqn1):
     if (Dynamics==0):
         ddq =  dynamics(qh[:, current+1], dq[:, current])
@@ -298,7 +312,7 @@ def equation_1(dqn1):
         ddq = dynamics1(qh[:, current + 1], dq[:, current])
         ddqn = dynamics1(qh[:, current + 1], dqn1)
 
-    a= dqn1 - dq[:, current] - (h/2)*(ddq + ddqn)
+    a= dqn1 - dq[:, current] - (h/2)*(ddqn + ddqn)
     b = [a[0, 0], a[0, 1], a[0, 2], a[0, 3], a[0, 4]]
 
     return b
@@ -434,8 +448,11 @@ def stormer_verlet2(q0, dq0, O):
 
         q[:, i+1] = q[:, i] + h*dqh[:, i+1]
 
-        ddq = dynamics1(q[:, i+1], dqh[:, i+1])
-        dq[:, i+1] = dqh[:, i+1] + (h/2)*ddq
+        # ddq = dynamics1(q[:, i+1], dqh[:, i+1])
+        # dq[:, i+1] = dqh[:, i+1] + (h/2)*ddq
+
+        dq1, dq2, dq3, dq4, dq5 = fsolve(equation3, (1, 1, 1, 1, 1))
+        dq[:, i + 1] = [dq1, dq2, dq3, dq4, dq5]
 
 
 
@@ -543,8 +560,8 @@ def animation(linkx, linky):
 
 
 Dynamics = 0
-stormer_verlet(q0, dq0, O)
-print(dq)
+stormer_verlet2(q0, dq0, O)
+#print(dq)
 t=np.arange(N)
 plt.plot(h*t, TE, label="Total Energy")
 plt.plot(h*t, KE, label="Kinetic Energy")
