@@ -13,48 +13,47 @@ h=0.1
 
 # initial conditins
 q0=np.pi/4
-p0=0
+p0=-100
 
 # iterations
-n=500
+n=100
 
 def Explicit_Eular(k, h, q0, p0):
     sol=np.zeros([2,n])
     sol[:,0]=np.array([[q0], [p0]])[:,0]
 
     for i in range(n-1):
-        sol[0,i+1] = sol[0,i] + h*sol[1,i]
-        sol[1,i+1] = sol[1,i] - h*(k**2)*sol[0,i]
+        sol[0,i+1] = sol[0,i] + h*sol[1,i]/(m*(l**2))
+        sol[1,i+1] = sol[1,i] - h*m*g*l*sol[0,i]
 
     H = np.zeros([n])
+    PE = np.zeros([n])
+    KE = np.zeros([n])
     for i in range(n):
-        H[i] = -(1/2)*m*g*l*np.cos(sol[0,i]) + (1/(2*m))*((sol[1, i])**2)
-
+        PE[i] = -m * g * l * np.cos(sol[0, i])
+        KE[i] = (1 / (2 * m * (l ** 2))) * ((sol[1, i]) ** 2)
+        H[i] = PE[i] + KE[i]
+        #H1[i] = -m * g * l * np.cos(sol[0, i]) + (1 / 2) * m * ((g * h * i * np.cos(sol[0, i])) ** 2)
     return sol, H
 
 
-# def Implicit_Eular(m, k, h, q0, p0):
-#     sol=np.zeros([2,n])
-#     sol[:,0]=np.array([[q0], [p0]])[:,0]
-#
-#     for i in range(n-1):
-#         sol[0,i+1] = (sol[0,i] + h*sol[1,i]/m)*(1/(1+(h**2)*k/m))
-#         sol[1,i+1] = (sol[1,i] - h*k*sol[0,i])*(1/(1+(h**2)*k/m))
-#
-#     return sol
 
 def Symplectic_Eular_VT(k, h, q0, p0):
     sol=np.zeros([2,n])
     sol[:,0]=np.array([[q0], [p0]])[:,0]
 
     for i in range(n-1):
-        sol[1, i + 1] = sol[1, i] - h * (k**2) * sol[0, i]
-        sol[0,i+1] = sol[0,i] + h*sol[1,i+1]
+        sol[1, i + 1] = sol[1, i] - h * m*g*l * sol[0, i]
+        sol[0,i+1] = sol[0,i] + h*sol[1,i+1]/(m*(l**2))
 
     H = np.zeros([n])
+    PE = np.zeros([n])
+    KE = np.zeros([n])
     for i in range(n):
-        H[i] = -(1 / 2) * m * g * l * np.cos(sol[0, i]) + (1 / (2 * m)) * ((sol[1, i]) ** 2)
-
+        PE[i] = -m * g * l * np.cos(sol[0, i])
+        KE[i] = (1 / (2 * m * (l ** 2))) * ((sol[1, i]) ** 2)
+        H[i] = PE[i] + KE[i]
+        #H1[i] = -m * g * l * np.cos(sol[0, i]) + (1 / 2) * m * ((g * h * i * np.cos(sol[0, i])) ** 2)
     return sol, H
 
 def Symplectic_Eular_TV(k, h, q0, p0):
@@ -62,57 +61,40 @@ def Symplectic_Eular_TV(k, h, q0, p0):
     sol[:,0]=np.array([[q0], [p0]])[:,0]
 
     for i in range(n-1):
-        sol[0,i+1] = sol[0,i] + h*sol[1,i]
-        sol[1,i+1] = sol[1,i] - h*(k**2)*sol[0,i+1]
-
-    H = np.zeros([n])
-    for i in range(n):
-        H[i] = -(1 / 2) * m * g * l * np.cos(sol[0, i]) + (1 / (2 * m)) * ((sol[1, i]) ** 2)
-
-    return sol, H
-
-def stormer_verlet(k, h, q0, p0):
-    sol = np.zeros([2, n])
-    sol[:, 0] = np.array([[q0], [p0]])[:, 0]
-    q1 = np.zeros([n])
-
-    for i in range(n-1):
-        q1[i+1] = sol[0,i] + h*sol[1,i]/2
-        sol[1, i + 1] = sol[1, i] - h * (k ** 2) * q1[i + 1]
-        sol[0, i + 1] = q1[i+1] + h * sol[1, i+1]/2
+        sol[0,i+1] = sol[0,i] + h*sol[1,i]/(m*(l**2))
+        sol[1,i+1] = sol[1,i] - h*m*g*l*sol[0,i+1]
 
     H = np.zeros([n])
     PE = np.zeros([n])
     KE = np.zeros([n])
     for i in range(n):
         PE[i] = -m * g * l * np.cos(sol[0, i])
-        KE[i] = (1 / (2 * m)) * ((sol[1, i]) ** 2)
+        KE[i] = (1 / (2 * m * (l ** 2))) * ((sol[1, i]) ** 2)
         H[i] = PE[i] + KE[i]
-        H1[i] = -m * g * l * np.cos(sol[0, i]) + (1/2)*m*((g*h*i*np.cos(sol[0,i]))**2)
+        #H1[i] = -m * g * l * np.cos(sol[0, i]) + (1 / 2) * m * ((g * h * i * np.cos(sol[0, i])) ** 2)
+    return sol, H
 
-    return sol, H, H1, PE, KE
 
-def stormer_verlet1(k, h, q0, p0):
+def stormer_verlet(k, h, q0, p0):
     sol = np.zeros([2, n])
     sol[:, 0] = np.array([[q0], [p0]])[:, 0]
     q1 = np.zeros([n])
     I = m*l**2
 
     for i in range(n-1):
-        q1[i+1] = sol[0,i] + h*sol[1,i]/(2*I)
+        q1[i+1] = sol[0,i] + (h/2)*sol[1,i]/(m*(l**2))
         sol[1, i + 1] = sol[1, i] - h *m*g*l * np.sin(q1[i + 1])
-        sol[0, i + 1] = q1[i+1] + h * sol[1, i+1]/(2*I)
+        sol[0, i + 1] = q1[i+1] + (h/2) * sol[1, i+1]/(m*(l**2))
 
     H = np.zeros([n])
     PE = np.zeros([n])
     KE = np.zeros([n])
     for i in range(n):
         PE[i] = -m * g * l * np.cos(sol[0, i])
-        KE[i] = (1 / (2 * I)) * ((sol[1, i]) ** 2)
+        KE[i] = (1 / (2 * m * (l ** 2))) * ((sol[1, i]) ** 2)
         H[i] = PE[i] + KE[i]
-        H1[i] = -m * g * l * np.cos(sol[0, i]) + (1/2)*m*((g*h*i*np.cos(sol[0,i]))**2)
-
-    return sol, H, H1, PE, KE
+        #H1[i] = -m * g * l * np.cos(sol[0, i]) + (1 / 2) * m * ((g * h * i * np.cos(sol[0, i])) ** 2)
+    return sol, H
 
 
 def animation(ans1, l, name):
@@ -140,30 +122,34 @@ ans1, H1 = Explicit_Eular(k, h, q0, p0)
 #ans2, H2 = Implicit_Eular(m, k, h, q0, p0)
 ans3, H3 = Symplectic_Eular_VT(k, h, q0, p0)
 ans4, H4 = Symplectic_Eular_TV(k, h, q0, p0)
-ans5, H5, H51, PE5, KE5 = stormer_verlet1(k, h, q0, p0)
+ans5, H5 = stormer_verlet(k, h, q0, p0)
 fig=plt.figure()
-plt.title('Mathematical Pendulum')
+plt.title('Mathematical Pendulum (phase plot)')
 plt.xlabel('q')
 plt.ylabel('p')
-plt.plot(ans5[0,:], ans5[1,:], label='Explicit Eular')
+plt.plot(ans1[0,:], ans1[1,:], label='Explicit Eular')
 #plt.plot(ans2[0,:], ans2[1,:], label='Implicit Eular')
 plt.plot(ans3[0,:], ans3[1,:], label='Symplectic Eular VT')
 plt.plot(ans4[0,:], ans4[1,:], label='Symplectic Eular TV')
-plt.legend()
+plt.plot(ans5[0,:], ans5[1,:], label='Stormer Verlet')
+plt.legend(loc='lower right')
 plt.show()
-#fig.savefig('Mathematical Pendulum')
-animation(ans5, l, 'stormer-verlet')
+fig.savefig('Pendulum_phase')
+#animation(ans5, l, 'stormer-verlet')
 # animation(ans3, l, 'Symplectic Eular VT')
 # animation(ans4, l, 'Symplectic Eular TV')
+
+
 t=np.arange(n)
 fig2=plt.figure()
-plt.plot(h*t, H5, label="Total Energy")
-plt.title("Energy plot of stormer-verlet method")
+plt.plot(h*t, H1, label="Explicit Eular")
+plt.plot(h*t, H3, label="Symplectic Eular VT")
+plt.plot(h*t, H4, label="Symplectic Eular TV")
+plt.plot(h*t, H5, label="Stormer Verlet")
+plt.title("Mathematical Pendulum (energy plot)")
 #plt.plot(h*t, H51, label="H1")
-plt.plot(h*t, PE5, label="Potential Energy")
-plt.plot(h*t, KE5, label="Kinetic Energy")
-plt.xlabel("t")
-plt.ylabel("Energy")
+plt.xlabel("t (time)")
+plt.ylabel("Total Energy")
 plt.legend()
 plt.show()
-#fig2.savefig("Pendulum_Energy")
+fig2.savefig("Pendulum_Energy")
